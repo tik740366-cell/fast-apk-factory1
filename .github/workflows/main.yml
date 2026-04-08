@@ -1,4 +1,4 @@
-name: Build APK
+name: Build YTools App
 on: [workflow_dispatch]
 jobs:
   build:
@@ -10,12 +10,21 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - run: |
+          # تثبيت المكتبات الضرورية
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init MyApp com.katkout.app --web-dir www
+          
+          # إنشاء الإعدادات لو ماكانش الملف موجود
+          npx cap init YTools com.ytools.app --web-dir www
+          
+          # إضافة منصة أندرويد وتجهيز الملفات
           npx cap add android
           npx cap copy
+          
+          # بناء ملف APK
           cd android && ./gradlew assembleDebug
-      - uses: actions/upload-artifact@v4
+          
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: My-App-APK
+          name: YTools-Package
           path: android/app/build/outputs/apk/debug/app-debug.apk
