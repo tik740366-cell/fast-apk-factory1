@@ -2,58 +2,115 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Katkout AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>YTools</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .active-tab { color: #f97316; border-top: 3px solid #f97316; }
+        body { -webkit-tap-highlight-color: transparent; background-color: #f0f9ff; }
+    </style>
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center p-6 font-sans text-right">
-    <div class="w-full max-w-md bg-slate-800 p-6 rounded-3xl shadow-2xl border border-slate-700 mt-10">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-black text-blue-500 tracking-tight">KATKOUT AI</h1>
-            <p class="text-slate-400 text-xs mt-2">اصنع صوراً احترافية بالذكاء الاصطناعي</p>
-        </div>
-        
-        <div class="space-y-4">
-            <div>
-                <label class="block text-xs text-blue-400 mb-2 font-bold uppercase tracking-wider">وصف الصورة</label>
-                <textarea id="prompt" class="w-full p-4 rounded-2xl bg-slate-900 border border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none h-32 resize-none text-white placeholder-slate-600" 
-                    placeholder="مثلاً: رائد فضاء يركب جملاً في الغروب..."></textarea>
-            </div>
-            
-            <button onclick="generate()" id="btn" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold shadow-lg shadow-blue-900/20 transition-all active:scale-95">
-                توليد الصورة الآن
-            </button>
+<body class="flex flex-col h-screen text-slate-800">
+
+    <div class="bg-sky-500 p-4 text-white text-center shadow-md">
+        <h1 class="text-xl font-bold tracking-widest">YTools</h1>
+    </div>
+
+    <div id="content" class="flex-1 p-5 overflow-y-auto">
         </div>
 
-        <div id="result" class="mt-8 hidden">
-            <div class="p-2 bg-slate-700 rounded-2xl border border-slate-600 overflow-hidden shadow-inner">
-                <img id="ai-img" class="w-full rounded-xl" src="">
-            </div>
-            <p class="text-center text-[10px] text-slate-500 mt-4 italic">تم التوليد بواسطة محرك Pollinations</p>
-        </div>
+    <div class="bg-white border-t flex justify-around p-2 pb-6 shadow-lg">
+        <button onclick="showScreen('calc')" id="tab-calc" class="flex flex-col items-center text-sky-600 transition-all">
+            <span class="text-2xl">🔢</span>
+            <span class="text-[10px] font-bold">حاسبة</span>
+        </button>
+        <button onclick="showScreen('chrono')" id="tab-chrono" class="flex flex-col items-center text-sky-600 transition-all">
+            <span class="text-2xl">⏱️</span>
+            <span class="text-[10px] font-bold">مؤقت</span>
+        </button>
+        <button onclick="showScreen('conv')" id="tab-conv" class="flex flex-col items-center text-sky-600 transition-all">
+            <span class="text-2xl">🔄</span>
+            <span class="text-[10px] font-bold">محول</span>
+        </button>
     </div>
 
     <script>
-        function generate() {
-            const prompt = document.getElementById('prompt').value;
-            const btn = document.getElementById('btn');
-            if(!prompt) return alert("عفاك اكتب شي وصف أولاً!");
+        // 1. Logic for Switching Screens
+        function showScreen(type) {
+            const content = document.getElementById('content');
+            // Reset Tabs
+            document.querySelectorAll('button').forEach(b => b.classList.remove('active-tab'));
+            document.getElementById('tab-' + type).classList.add('active-tab');
 
-            btn.disabled = true;
-            btn.innerText = "جاري التوليد... ⏳";
-            
-            const seed = Math.floor(Math.random() * 999999);
-            const url = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=1024&height=1024&seed=${seed}`;
-            const img = document.getElementById('ai-img');
-            
-            img.src = url;
-            img.onload = () => {
-                document.getElementById('result').classList.remove('hidden');
-                btn.disabled = false;
-                btn.innerText = "توليد الصورة الآن";
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-            };
+            if(type === 'calc') {
+                content.innerHTML = `
+                    <div class="bg-white p-4 rounded-3xl shadow-xl max-w-sm mx-auto">
+                        <div id="display" class="bg-sky-50 text-right p-6 text-3xl rounded-2xl mb-4 h-20 flex items-center justify-end font-mono border border-sky-100">0</div>
+                        <div class="grid grid-cols-4 gap-3">
+                            ${['7','8','9','/','4','5','6','*','1','2','3','-','C','0','=','+'].map(btn => `
+                                <button onclick="calc('${btn}')" class="${btn === '=' ? 'bg-orange-500' : 'bg-sky-100'} p-4 rounded-xl font-bold text-xl active:scale-90 transition-all">
+                                    ${btn}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>`;
+            } else if(type === 'chrono') {
+                content.innerHTML = `
+                    <div class="text-center mt-10">
+                        <div class="text-6xl font-mono text-sky-600 mb-10" id="timerDisplay">00:00:00</div>
+                        <div class="flex gap-4 justify-center">
+                            <button onclick="startChrono()" class="bg-sky-500 text-white px-8 py-3 rounded-full font-bold">ابدأ</button>
+                            <button onclick="stopChrono()" class="bg-orange-500 text-white px-8 py-3 rounded-full font-bold">توقف</button>
+                            <button onclick="resetChrono()" class="bg-slate-200 px-8 py-3 rounded-full font-bold">تصفير</button>
+                        </div>
+                    </div>`;
+            } else if(type === 'conv') {
+                content.innerHTML = `
+                    <div class="bg-white p-6 rounded-3xl shadow-md border border-sky-100">
+                        <h2 class="font-bold mb-4 text-sky-600">محول العملات (مثال: USD إلى MAD)</h2>
+                        <input type="number" id="valInput" placeholder="المبلغ بالدولار" class="w-full p-4 bg-sky-50 border border-sky-200 rounded-xl mb-4 outline-none">
+                        <button onclick="convert()" class="w-full bg-orange-500 text-white py-4 rounded-xl font-bold">تحويل إلى درهم</button>
+                        <div id="convResult" class="mt-4 text-center text-2xl font-bold text-sky-700"></div>
+                    </div>`;
+            }
         }
+
+        // 2. Calculator Logic
+        let currentInput = "";
+        function calc(val) {
+            const display = document.getElementById('display');
+            if(val === '=') {
+                try { display.innerText = eval(currentInput); currentInput = display.innerText; } catch { display.innerText = "Error"; }
+            } else if(val === 'C') {
+                currentInput = ""; display.innerText = "0";
+            } else {
+                currentInput += val; display.innerText = currentInput;
+            }
+        }
+
+        // 3. Chronometer Logic
+        let timer; let seconds = 0;
+        function startChrono() {
+            clearInterval(timer);
+            timer = setInterval(() => {
+                seconds++;
+                let h = Math.floor(seconds/3600).toString().padStart(2,'0');
+                let m = Math.floor((seconds%3600)/60).toString().padStart(2,'0');
+                let s = (seconds%60).toString().padStart(2,'0');
+                document.getElementById('timerDisplay').innerText = `${h}:${m}:${s}`;
+            }, 1000);
+        }
+        function stopChrono() { clearInterval(timer); }
+        function resetChrono() { stopChrono(); seconds = 0; document.getElementById('timerDisplay').innerText = "00:00:00"; }
+
+        // 4. Converter Logic
+        function convert() {
+            const val = document.getElementById('valInput').value;
+            if(val) document.getElementById('convResult').innerText = (val * 10.15).toFixed(2) + " درهم";
+        }
+
+        // Initial View
+        showScreen('calc');
     </script>
 </body>
 </html>
